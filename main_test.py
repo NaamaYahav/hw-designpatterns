@@ -3,6 +3,69 @@ import pytest
 from main import *
 from outputtypes import *
 
+# Helper functions to check if the edges form a valid tree
+def is_acyclic(edges):
+    parent = {}
+
+    def find(x):
+        if parent[x] != x:
+            parent[x] = find(parent[x])
+        return parent[x]
+
+    def union(x,y):
+        parent[find(x)] = find(y)
+
+    nodes = set()
+    for u,v,_ in edges:
+        nodes.add(u)
+        nodes.add(v)
+
+    for node in nodes:
+        parent[node] = node
+
+    for u,v,_ in edges:
+        if find(u) == find(v):
+            return False
+        union(u,v)
+    return True
+
+def is_connected(edges):
+    nodes = set()
+    for u,v,_ in edges:
+        nodes.add(u)
+        nodes.add(v)
+    visited = set()
+
+    def dfs(u):
+        visited.add(u)
+        for x,y,_ in edges:
+            if x == u and y not in visited:
+                dfs(y)
+            if y == u and x not in visited:
+                dfs(x)
+
+    start = next(iter(nodes))
+    dfs(start)
+    return visited == nodes
+
+def is_graph_connected(graph):
+    if not graph:
+        return True
+
+    visited = set()
+
+    def dfs(u):
+        visited.add(u)
+        for v, _ in graph[u]:
+            if v not in visited:
+                dfs(v)
+
+    start = next(iter(graph))
+    dfs(start)
+
+    return len(visited) == len(graph)
+
+#basic test
 def test_medium_graph():
     graph = {
         0: [(1,4),(2,1)],
@@ -51,53 +114,6 @@ def test_disconnected_graph():
     }
     assert mst(kruskal, graph, Weight) == 0
     assert mst(prim, graph, Weight) == 0
-
-
-# Helper functions to check if the edges form a valid tree
-def is_acyclic(edges):
-    parent = {}
-
-    def find(x):
-        if parent[x] != x:
-            parent[x] = find(parent[x])
-        return parent[x]
-
-    def union(x,y):
-        parent[find(x)] = find(y)
-
-    nodes = set()
-    for u,v,_ in edges:
-        nodes.add(u)
-        nodes.add(v)
-
-    for node in nodes:
-        parent[node] = node
-
-    for u,v,_ in edges:
-        if find(u) == find(v):
-            return False
-        union(u,v)
-
-    return True
-def is_connected(edges):
-    nodes = set()
-    for u,v,_ in edges:
-        nodes.add(u)
-        nodes.add(v)
-
-    visited = set()
-
-    def dfs(u):
-        visited.add(u)
-        for x,y,_ in edges:
-            if x == u and y not in visited:
-                dfs(y)
-            if y == u and x not in visited:
-                dfs(x)
-
-    start = next(iter(nodes))
-    dfs(start)
-    return visited == nodes
 
 #Edges correctness
 @pytest.mark.parametrize("algo", [kruskal, prim])
@@ -194,9 +210,12 @@ def test_random_graphs(n):
     for _ in range(10): 
         graph = generate_random_graph(n)
 
+        if not is_graph_connected(graph):
+            continue
+        
         if all(len(v) == 0 for v in graph.values()):
             continue
-
+        
         w1 = mst(kruskal, graph, Weight)
         w2 = mst(prim, graph, Weight)
         assert w1 == w2

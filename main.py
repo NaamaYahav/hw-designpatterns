@@ -1,4 +1,9 @@
 # Put your code here. You can add files if needed.
+from collections import defaultdict
+import heapq
+from builders import *
+from outputtypes import *
+import random
 
 """
 Minimum Spanning Tree (MST) System using Design Patterns
@@ -54,10 +59,6 @@ Summary
 The implementation is modular, efficient, and avoids code duplication,
 while supporting multiple configurations as required.
 """
-from collections import defaultdict
-import heapq
-from builders import *
-from outputtypes import *
 
 #Seprate function to parse the input graph into a common format (list of edges)
 def parse_input(graph):
